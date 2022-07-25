@@ -29,6 +29,14 @@ resource "aws_security_group" "allow_ssh_pub" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    description = "Allow Trino"
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/16"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -48,9 +56,17 @@ resource "aws_security_group" "allow_ssh_priv" {
   vpc_id      = module.vpc.vpc_id
 
   ingress {
-    description = "SSH only from internal VPC clients"
+    description = "Allow SSH from private subnet"
     from_port   = 22
     to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/16"]
+  }
+
+  ingress {
+    description = "Allow Trino"
+    from_port   = 8080
+    to_port     = 8080
     protocol    = "tcp"
     cidr_blocks = ["10.0.0.0/16"]
   }
