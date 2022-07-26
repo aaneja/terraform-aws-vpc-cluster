@@ -5,14 +5,23 @@ variable "base_install" {
   default = <<EOF
 cd /home/ec2-user
 
-echo "Installing JDK"
 sudo apt-get -y update
-wget https://cdn.azul.com/zulu/bin/zulu17.36.13-ca-jdk17.0.4-linux.x86_64.rpm
+sudo yum -y install git htop
+
+echo "Installing Azul JDK"
+wget -q https://cdn.azul.com/zulu/bin/zulu17.36.13-ca-jdk17.0.4-linux.x86_64.rpm
 sudo yum install -y zulu17.36.13-ca-jdk17.0.4-linux.x86_64.rpm
 
 echo "Installing Trino"
-wget https://repo1.maven.org/maven2/io/trino/trino-server/391/trino-server-391.tar.gz
+wget -q https://repo1.maven.org/maven2/io/trino/trino-server/391/trino-server-391.tar.gz
 tar xzf trino-server-391.tar.gz
+
+ln -s trino-server-391 trino
+
+echo "Cloning deploy repo"
+git clone https://github.com/aaneja/trino-deploy.git
+
+chown -R ec2-user:ec2-user /home/ec2-user/.
 EOF
 }
 
@@ -32,15 +41,14 @@ data "aws_ami" "amazon-linux-2" {
 resource "aws_instance" "ec2_public" {
   ami                         = data.aws_ami.amazon-linux-2.id
   associate_public_ip_address = true
-  instance_type               = "t2.micro"
+  instance_type               = "r5.4xlarge"
   key_name                    = var.key_name
   subnet_id                   = var.vpc.public_subnets[0]
   vpc_security_group_ids      = [var.sg_pub_id]
   
   user_data = <<EOF
 #!/bin/bash
-cd /home/ec2-user
-touch is_coordinator
+echo "127.0.0.1 coordinator" >> /etc/hosts
 
 ${var.base_install}
 
@@ -56,8 +64,8 @@ EOF
 // Configure the EC2 instance in a private subnet
 resource "aws_instance" "ec2_private" {
   ami                         = data.aws_ami.amazon-linux-2.id
-  associate_public_ip_address = false
-  instance_type               = "t2.micro"
+  associate_public_ip_address = true
+  instance_type               = "r5.2xlarge"
   key_name                    = var.key_name
   subnet_id                   = var.vpc.public_subnets[0]
   vpc_security_group_ids      = [var.sg_pub_id]
@@ -65,13 +73,13 @@ resource "aws_instance" "ec2_private" {
   user_data = <<EOF
 #!/bin/bash
 
-echo "Adding IP to hosts"
-echo "${aws_instance.ec2_public.private_ip} coordinator" > /etc/hosts
+echo "Adding Coordinator IP to hosts"
+echo "${aws_instance.ec2_public.private_ip} coordinator" >> /etc/hosts
 
-
+${var.base_install}
 EOF
 
-  count                       = 2
+  count                       = 1
 
   tags = {
     "Name" = "WORKER",
