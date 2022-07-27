@@ -3,7 +3,7 @@ variable "base_install" {
   type     = string
   nullable = false
   default = <<EOF
-cd /home/ec2-user
+cd /tmp
 
 sudo apt-get -y update
 sudo yum -y install git htop
@@ -12,16 +12,11 @@ echo "Installing Azul JDK"
 wget -q https://cdn.azul.com/zulu/bin/zulu17.36.13-ca-jdk17.0.4-linux.x86_64.rpm
 sudo yum install -y zulu17.36.13-ca-jdk17.0.4-linux.x86_64.rpm
 
-echo "Installing Trino"
-wget -q https://repo1.maven.org/maven2/io/trino/trino-server/391/trino-server-391.tar.gz
-tar xzf trino-server-391.tar.gz
+echo "Installed Systems Manager"
+sudo yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+sudo systemctl enable amazon-ssm-agent
+sudo systemctl start amazon-ssm-agent
 
-ln -s trino-server-391 trino
-
-echo "Cloning deploy repo"
-git clone https://github.com/aaneja/trino-deploy.git
-
-chown -R ec2-user:ec2-user /home/ec2-user/.
 EOF
 }
 
@@ -49,6 +44,7 @@ resource "aws_instance" "ec2_public" {
   user_data = <<EOF
 #!/bin/bash
 echo "127.0.0.1 coordinator" >> /etc/hosts
+touch /home/ec2-user/isCoordinator
 
 ${var.base_install}
 
@@ -79,7 +75,7 @@ echo "${aws_instance.ec2_public.private_ip} coordinator" >> /etc/hosts
 ${var.base_install}
 EOF
 
-  count                       = 1
+  count                       = 3
 
   tags = {
     "Name" = "WORKER",
