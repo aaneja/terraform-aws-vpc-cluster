@@ -53,11 +53,11 @@ resource "aws_iam_role_policy_attachment" "dev-resources-ssm-policy" {
 }
 
 
-// Configure the EC2 instance in a public subnet
-resource "aws_instance" "ec2_public" {
+// Coordinator
+resource "aws_instance" "coordinator" {
   ami                         = data.aws_ami.amazon-linux-2.id
   associate_public_ip_address = true
-  instance_type               = "r5.4xlarge"
+  instance_type               = var.coordinator_instance_type
   key_name                    = var.key_name
   subnet_id                   = var.vpc.public_subnets[0]
   vpc_security_group_ids      = [var.sg_pub_id]
@@ -73,17 +73,16 @@ ${var.base_install}
 EOF
 
   tags = {
-    "Name"     = "COORDINATOR",
-    "trino-id" = "COORDINATOR"
+    "Name"     = "COORDINATOR"
   }
 
 }
 
-// Configure the EC2 instance in a private subnet
-resource "aws_instance" "ec2_private" {
+// Workers
+resource "aws_instance" "worker" {
   ami                         = data.aws_ami.amazon-linux-2.id
   associate_public_ip_address = true
-  instance_type               = "r5.2xlarge"
+  instance_type               = var.worker_instance_type
   key_name                    = var.key_name
   subnet_id                   = var.vpc.public_subnets[0]
   vpc_security_group_ids      = [var.sg_pub_id]
@@ -92,16 +91,15 @@ resource "aws_instance" "ec2_private" {
 #!/bin/bash
 
 echo "Adding Coordinator IP to hosts"
-echo "${aws_instance.ec2_public.private_ip} coordinator" >> /etc/hosts
+echo "${aws_instance.coordinator.private_ip} coordinator" >> /etc/hosts
 
 ${var.base_install}
 EOF
 
-  count = 4
+  count = var.worker_count
 
   tags = {
-    "Name"     = "WORKER",
-    "trino-id" = "WORKER"
+    "Name"     = "WORKER"
   }
 
 }

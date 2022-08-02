@@ -11,3 +11,5 @@
 .vscode
 
 *.pem
+.terraform.lock.hcl
+deploy.tfplan

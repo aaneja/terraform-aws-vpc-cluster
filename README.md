@@ -1,55 +1,72 @@
-# AWS VPC Creation with Terraform
-This project will create a VCP with Internet Gateway, subnets accross 2 AZs: one public
-and one one private.
+# AWS Cluster of nodes thru Terraform
+This project create a cluster of nodes in a VPC with 
+1. One node designated as the 'coordinator'. File `/home/ec2-user/isCoordinator` is created on this node
+1. All other nodes are designated 'worker'. Each worker has an entry in `/etc/hosts` to the coordinator internal IP
+1. All nodes have an external IPv4 address. Nodes are SSH-able thru the (same) generated ssh-key. Port 22 is open to public facing internet
+1. AWS Systems Manager policy/setup is performed on the nodes so that SSM run-command can be used on these nodes
+1. Port 8080 (TCP) is open on the inter node security group 
+1. Azure Java 17 is installed on all nodes
 
-From there terraform will deploy a bastion host in the public subnet in AZ1 and a second host
-in the private subnet in AZ2, which can connect to the internet via a NAT gateway created
-as part of the VPC.
-
-An SSH key pair is dynamically generated as well, and the private key is copied over to the
-bastion host.
-
-The ec2 instance in the public subnet is assigned a security group with access from the 
-the intenret via port 22 (for ssh).
-
-The ec2 instance in the private subnet is assigned to a security group that only allows
-ssh access only from connections in the public subnet.
-
-Both security groups are dynamically created in the network module.
-
-## High level diagram
-
-![Diagram](img/demo-tform-aws-vpc.png)
-
-## Current state
-
-Modules:
-
-- ssh-key: Generates an ssh key pair
-- network: Sets up a VPC with IGWs, NAT GWs, 2 public subnets, 2 private subnets, SG to SSH in from anywhere
-- ec2: Currently creates a bastian ec2 instance in a public subnet and a ec2 instance in a private subnet
-- each subnet is in a different AZ
-- private key is copied over to the bastion ec2 instance so it can ssh into the private subnet
-- ec2 in private subnet has outgoing network access though the NAT gateway
-- may add ansible playbook to take care of copying over the shh key to the bastian ec2## Requirements
-
-No requirements.
-
-## Providers
-
-No provider.
+## Pre reqs
+- Install [Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli#install-terraform) on your platform of choice
+- Create an AWS User with below permission policies attached :
+    - `arn:aws:iam::aws:policy/AmazonEC2FullAccess`
+    - `arn:aws:iam::aws:policy/AmazonVPCFullAccess`
+    - `arn:aws:iam::aws:policy/IAMFullAccess`
+    - To be able to run SSM commands as this user, also attach an inline policy :
+    ```
+    {
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ssm:*"
+            ],
+            "Resource": "*"
+        }
+    ]
+    }
+    ```
+- Drop to shell and assume the above AWS user
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| namespace | The project namespace to use for unique resource naming | `string` | `"LL-TEST"` | no |
-| region | AWS region | `string` | `"us-east-1"` | no |
+| namespace | The project namespace to use for unique resource naming | `string` | `"VPC-CLUSTER"` | no |
+| region | AWS region | `string` | `"us-west-2"` | no |
+| coordinator_instance_type | AWS region | `string` | `"r5.4xlarge"` | no |
+| worker_instance_type | AWS region | `string` | `"r5.2xlarge"` | no |
+| worker_count | AWS region | `number` | `1` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| private\_connection\_string | Copy/Paste/Enter - You are in the private ec2 instance |
-| public\_connection\_string | Copy/Paste/Enter - You are in the matrix |
+| coordinator\_connection\_string | Conn string to the coordinator |
 
+
+## Example usage
+
+Edit the variables.tf to your liking then :
+```
+> terraform plan -out="deploy.tfplan"
+....
+Plan: 29 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + coordinator_conn_string = (known after apply)
+
+> terraform apply "deploy.tfplan"
+```
+
+To destroy the full setup :
+```
+> terraform destroy
+```
+
+To just destroy the EC2 nodes (both coordinator and workers) :
+```
+> terraform destroy -target 'module.ec2.aws_instance.coordinator'
+```

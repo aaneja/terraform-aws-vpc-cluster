@@ -1,12 +1,8 @@
-output "public_ip" {
-  value = aws_instance.ec2_public.public_ip
-}
-
-output "coordinator_private_ip" {
-  value = aws_instance.ec2_public.private_ip
+output "coordinator_public_ip" {
+  value = aws_instance.coordinator.public_ip
 }
 
 
-output "private_ip" {
-  value = aws_instance.ec2_private.*.private_ip
+output "worker_public_ip" {
+  value = aws_instance.worker.*.private_ip
 }

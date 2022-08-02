@@ -17,3 +17,21 @@ variable "sg_pub_id" {
 variable "sg_priv_id" {
   type = any
 }
+
+variable "coordinator_instance_type" {
+  description = "The project namespace to use for unique resource naming"
+  default     = "r5.2xlarge"
+  type        = string
+}
+
+variable "worker_instance_type" {
+  description = "The project namespace to use for unique resource naming"
+  default     = "r5.4xlarge"
+  type        = string
+}
+
+variable "worker_count" {
+  description = "The project namespace to use for unique resource naming"
+  default     = 1
+  type        = number
+}
