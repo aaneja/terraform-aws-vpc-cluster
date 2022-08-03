@@ -36,15 +36,19 @@ This project create a cluster of nodes in a VPC with
 |------|-------------|------|---------|:--------:|
 | namespace | The project namespace to use for unique resource naming | `string` | `"VPC-CLUSTER"` | no |
 | region | AWS region | `string` | `"us-west-2"` | no |
-| coordinator_instance_type | AWS region | `string` | `"r5.4xlarge"` | no |
-| worker_instance_type | AWS region | `string` | `"r5.2xlarge"` | no |
-| worker_count | AWS region | `number` | `1` | no |
+| coordinator_instance_type | Instance type for coordinator | `string` | `"r5.4xlarge"` | no |
+| worker_instance_type | Instance type for workers | `string` | `"r5.2xlarge"` | no |
+| worker_count | Number of worker instances needed | `number` | `1` | no |
 
 ## Outputs
 
-| Name | Description |
-|------|-------------|
-| coordinator\_connection\_string | Conn string to the coordinator |
+Once the stack is deployed, you can use the locally created 'vpc_hosts' file to ssh into any host
+```
+ssh -F vpc_hosts coordinator
+ssh -F vpc_hosts worker0
+ssh -F vpc_hosts worker1
+...
+```
 
 
 ## Example usage

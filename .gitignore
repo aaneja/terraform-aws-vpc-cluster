@@ -13,3 +13,4 @@
 *.pem
 .terraform.lock.hcl
 deploy.tfplan
+vpc_hosts
