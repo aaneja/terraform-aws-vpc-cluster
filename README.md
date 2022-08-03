@@ -2,10 +2,10 @@
 This project create a cluster of nodes in a VPC with 
 1. One node designated as the 'coordinator'. File `/home/ec2-user/isCoordinator` is created on this node
 1. All other nodes are designated 'worker'. Each worker has an entry in `/etc/hosts` to the coordinator internal IP
-1. All nodes have an external IPv4 address. Nodes are SSH-able thru the (same) generated ssh-key. Port 22 is open to public facing internet
+1. All nodes have an external IPv4 address, and are SSH-able. A SSH key is created and public key is installed on all hosts
+1. Additionally a local hosts file 'vpc_hosts' is created to allow easy login to nodes
 1. AWS Systems Manager policy/setup is performed on the nodes so that SSM run-command can be used on these nodes
 1. Port 8080 (TCP) is open on the inter node security group 
-1. Azure Java 17 is installed on all nodes
 
 ## Pre reqs
 - Install [Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli#install-terraform) on your platform of choice

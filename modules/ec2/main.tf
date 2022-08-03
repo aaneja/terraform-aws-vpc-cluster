@@ -1,16 +1,11 @@
 
+// Install some basic software on the box
 variable "base_install" {
   type     = string
   nullable = false
   default  = <<EOF
-cd /tmp
-
 sudo apt-get -y update
 sudo yum -y install git htop
-
-echo "Installing Azul JDK"
-wget -q https://cdn.azul.com/zulu/bin/zulu17.36.13-ca-jdk17.0.4-linux.x86_64.rpm
-sudo yum install -y zulu17.36.13-ca-jdk17.0.4-linux.x86_64.rpm
 EOF
 }
 
