@@ -6,19 +6,19 @@ variable "namespace" {
 
 variable "coordinator_instance_type" {
   description = "The project namespace to use for unique resource naming"
-  default     = "r5.4xlarge"
+  default     = "m5.4xlarge"
   type        = string
 }
 
 variable "worker_instance_type" {
   description = "The project namespace to use for unique resource naming"
-  default     = "r5.2xlarge"
+  default     = "m5.2xlarge"
   type        = string
 }
 
 variable "worker_count" {
   description = "The project namespace to use for unique resource naming"
-  default     = 4
+  default     = 1
   type        = number
 }
 

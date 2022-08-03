@@ -5,7 +5,7 @@ variable "base_install" {
   nullable = false
   default  = <<EOF
 sudo apt-get -y update
-sudo yum -y install git htop
+sudo yum -y install git htop nc
 EOF
 }
 
